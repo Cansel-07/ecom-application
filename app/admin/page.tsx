@@ -1,10 +1,11 @@
-import { getSession } from '@auth0/nextjs-auth0';
+import { auth0 } from '@/lib/auth0';
 import { redirect } from 'next/navigation';
 
 export default async function AdminDashboard() {
-  const session = await getSession();
-  
-  const roles = session?.user?.['https://ecom/roles'] || [];
+  const session = await auth0.getSession();
+
+  const user = session?.user as Record<string, unknown> | undefined;
+  const roles = (user?.['https://ecom/roles'] as string[]) || [];
 
   if (!roles.includes('Admin')) {
     redirect('/');
