@@ -3,10 +3,12 @@
 import { useCart } from '../context/CartContext';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, cartTotal } = useCart();
   const [loading, setLoading] = useState(false);
+  const { user } = useUser();
 
   const handleCheckout = async () => {
     setLoading(true);
@@ -14,11 +16,15 @@ export default function CartPage() {
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cartItems }),
+        body: JSON.stringify({
+          items: cartItems,
+          userId: user?.sub,
+          userEmail: user?.email,
+        }),
       });
 
       const data = await response.json();
-      
+
       if (data.url) {
         window.location.href = data.url;
       } else {
@@ -52,7 +58,7 @@ export default function CartPage() {
           Continue Shopping
         </Link>
       </div>
-      
+
       <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
         {cartItems.map((item) => (
           <div key={item.id} className="flex justify-between items-center py-5 border-b border-gray-100 last:border-b-0">
@@ -70,8 +76,8 @@ export default function CartPage() {
             </div>
             <div className="flex flex-col items-end gap-2">
               <p className="font-bold text-xl text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
-              <button 
-                onClick={() => removeFromCart(item.id)} 
+              <button
+                onClick={() => removeFromCart(item.id)}
                 className="text-sm text-red-500 hover:text-red-700 font-medium"
               >
                 Remove
@@ -79,7 +85,7 @@ export default function CartPage() {
             </div>
           </div>
         ))}
-        
+
         <div className="mt-6 flex flex-col sm:flex-row justify-between items-center pt-6 border-t border-gray-200 gap-4">
           <div className="text-xl text-gray-600">
             Total amount: <span className="text-3xl font-black text-gray-900 ml-2">${cartTotal.toFixed(2)}</span>
