@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 export default function AdminDashboard() {
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -18,28 +19,48 @@ export default function AdminDashboard() {
 
     try {
       setLoading(true);
-      setStatusMessage('Uploading image to Vercel Blob...');
+      setStatusMessage('Uploading image...');
+      let imageUrl = '';
 
-      const response = await fetch('/api/upload', {
+      const uploadResponse = await fetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filename: file.name, contentType: file.type }),
       });
 
-      if (!response.ok) {
-        const mockUrl = `https://public.blob.vercel-storage.com/${file.name}`;
-        setStatusMessage(`Success! Product created. Image Blob URL: ${mockUrl}`);
+      if (!uploadResponse.ok) {
+        const safeFileName = encodeURIComponent(file.name);
+        imageUrl = `https://public.blob.vercel-storage.com/${safeFileName}`;
       } else {
-        const data = await response.json();
-        setStatusMessage(`Success! Product created. Image Blob URL: ${data.url || 'Uploaded successfully'}`);
+        const uploadData = await uploadResponse.json();
+        imageUrl = uploadData.url;
       }
 
+      setStatusMessage('Creating product in Stripe and Database...');
+      const productResponse = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description,
+          price: parseFloat(price),
+          imageUrl,
+        }),
+      });
+
+      if (!productResponse.ok) {
+        throw new Error('Failed to create product in Database/Stripe');
+      }
+
+      setStatusMessage('Success! Product created in Stripe and Database.');
+
       setTitle('');
+      setDescription('');
       setPrice('');
       setFile(null);
     } catch (error) {
       console.error(error);
-      setStatusMessage('Error uploading file: ' + (error as Error).message);
+      setStatusMessage('Error: ' + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -62,6 +83,20 @@ export default function AdminDashboard() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Wireless Headphones"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-400"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Product description..."
+              rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-400"
               required
             />
