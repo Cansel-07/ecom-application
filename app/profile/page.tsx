@@ -1,88 +1,82 @@
-"use client";
-import React from "react";
-import Link from "next/link";
-import { useUser } from "@auth0/nextjs-auth0/client";
+'use client';
 
-export default function Profile() {
-  const { user, error, isLoading } = useUser();
+import { useUser } from '@auth0/nextjs-auth0/client';
+import { useEffect, useState } from 'react';
+
+interface OrderItem {
+  id: string;
+  quantity: number;
+}
+
+interface Order {
+  id: string;
+  totalAmount: number;
+  createdAt: string;
+  items: OrderItem[];
+}
+
+export default function ProfilePage() {
+  const { user, isLoading } = useUser();
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (user?.sub) {
+      fetch(`/api/orders?userId=${encodeURIComponent(user.sub)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (isMounted && Array.isArray(data)) {
+            setOrders(data);
+          }
+        })
+        .catch((err) => console.error('Failed to load orders:', err));
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.sub]);
 
   if (isLoading) {
-    return (
-      <main className="flex items-center justify-center min-h-screen bg-gray-50">
-        <p className="text-xl font-semibold">Loading profile...</p>
-      </main>
-    );
-  }
-
-  if (error) {
-    return (
-      <main className="flex items-center justify-center min-h-screen bg-gray-50">
-        <p className="text-xl font-semibold text-red-500">Error: {error.message}</p>
-      </main>
-    );
-  }
-
-  if (!user) {
-    return (
-      <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-50">
-        <div className="bg-white p-10 rounded-2xl shadow-xl max-w-md text-center">
-          <p className="text-gray-600 mb-4">You need to be logged in to view your profile.</p>
-          <a href="/auth/login" className="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 block">
-            Log In
-          </a>
-        </div>
-      </main>
-    );
+    return <div className="p-10 text-center text-gray-800 font-medium">Loading profile...</div>;
   }
 
   return (
-    <main className="flex flex-col items-center min-h-screen p-8 bg-gray-50">
-      <div className="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-xl mt-10">
-        <h1 className="text-3xl font-bold mb-6 border-b pb-4 text-blue-900">User Profile</h1>
-        
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center gap-4">
-            {user.picture && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img 
-                src={user.picture} 
-                alt={user.name || "Profile Picture"} 
-                className="w-20 h-20 rounded-full shadow-md border-2 border-gray-200"
-              />
-            )}
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-800">{user.name}</h2>
-              <p className="text-gray-500">{user.email}</p>
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-4">
-            <div className="p-4 bg-gray-50 border border-gray-100 rounded-lg">
-              <span className="font-bold text-gray-700 block mb-1">Email Address</span>
-              <span className="text-gray-900">{user.email}</span>
-            </div>
-            
-            <div className="p-4 bg-gray-50 border border-gray-100 rounded-lg">
-              <span className="font-bold text-gray-700 block mb-1">Nickname</span>
-              <span className="text-gray-900">{user.nickname || "Not provided"}</span>
-            </div>
-
-            <div className="p-4 bg-gray-50 border border-gray-100 rounded-lg">
-              <span className="font-bold text-gray-700 block mb-1">Shipping Address</span>
-              <span className="text-gray-900 italic text-sm">No address added yet. (Settings coming soon)</span>
-            </div>
-          </div>
-
-          <div className="mt-8 pt-6 border-t flex justify-between items-center">
-            <Link href="/" className="text-blue-600 hover:underline font-semibold">
-              &larr; Back to Home
-            </Link>
-            <a href="/auth/logout" className="text-red-500 hover:underline font-semibold">
-              Log Out
-            </a>
-          </div>
-        </div>
+    <div className="p-10 max-w-4xl mx-auto min-h-screen">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">User Profile</h1>
+        <p className="text-gray-600 mt-1">Email: <span className="font-semibold text-gray-800">{user?.email}</span></p>
       </div>
-    </main>
+
+      <h2 className="text-2xl font-bold mb-4 text-gray-900">Order History</h2>
+
+      {orders.length === 0 ? (
+        <div className="bg-white p-6 rounded-xl border border-gray-200 text-gray-500">
+          No previous orders found.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {orders.map((order) => (
+            <div key={order.id} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4">
+              <div>
+                <p className="font-bold text-gray-800">Order ID: <span className="font-mono text-sm text-gray-600">{order.id}</span></p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Date: {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
+                </p>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-semibold uppercase px-2.5 py-1 bg-green-100 text-green-800 rounded-full">
+                  Completed
+                </span>
+                <p className="text-green-600 font-extrabold text-xl mt-1">
+                  ${order.totalAmount.toFixed(2)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
