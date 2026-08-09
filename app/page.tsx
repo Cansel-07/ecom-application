@@ -1,64 +1,49 @@
-"use client";
-import React from "react";
-import Link from "next/link";
-import { useUser } from "@auth0/nextjs-auth0/client";
+import { PrismaClient } from '@prisma/client';
+import ProductCard from './components/ProductCard';
+import Link from 'next/link';
 
-export default function Home() {
-  const { user, error, isLoading } = useUser();
+const prisma = new PrismaClient();
 
-  if (isLoading) {
-    return (
-      <main className="flex items-center justify-center min-h-screen">
-        <p className="text-xl font-semibold">Loading...</p>
-      </main>
-    );
-  }
-
-  if (error) {
-    return (
-      <main className="flex items-center justify-center min-h-screen">
-        <p className="text-xl text-red-500">Error: {error.message}</p>
-      </main>
-    );
-  }
+export default async function Home() {
+  const products = await prisma.product.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-50">
-      <h1 className="text-4xl font-extrabold mb-8 text-blue-900">
-        Welcome to Ecom Application
-      </h1>
+    <main className="p-8 max-w-7xl mx-auto min-h-screen">
+      <header className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-4">
+        <div>
+          <h1 className="text-4xl font-extrabold text-gray-900">Discover Products</h1>
+          <p className="text-gray-500 mt-2">Find the best items and add them to your cart.</p>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <Link href="/admin" className="text-blue-600 hover:underline font-medium px-4 py-2 border border-blue-600 rounded-full hover:bg-blue-50 transition-colors">
+            ⚙️ Admin Panel
+          </Link>
+          <Link 
+            href="/cart" 
+            className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all hover:-translate-y-0.5 flex items-center gap-2"
+          >
+            <span>🛒</span>
+            <span>Go to Cart</span>
+          </Link>
+        </div>
+      </header>
 
-      <div className="flex flex-col items-center gap-6 bg-white p-10 rounded-2xl shadow-xl w-full max-w-md text-center">
-        {!user ? (
-          <React.Fragment>
-            <p className="text-gray-600 mb-4">Please log in or sign up to continue shopping.</p>
-            <a 
-              href="/auth/login" 
-              className="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors block"
-            >
-              Log In / Sign Up
-            </a>
-          </React.Fragment>
-        ) : (
-          <React.Fragment>
-            <p className="text-lg text-gray-800">Hello, <span className="font-bold">{user.email}</span>!</p>
-            <div className="flex flex-col w-full gap-3 mt-4">
-              <Link 
-                href="/profile" 
-                className="w-full px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors block"
-              >
-                Go to My Profile
-              </Link>
-              <a 
-                href="/auth/logout" 
-                className="w-full px-6 py-3 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600 transition-colors block"
-              >
-                Log Out
-              </a>
-            </div>
-          </React.Fragment>
-        )}
-      </div>
+      {products.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-2xl border border-gray-200 shadow-sm">
+          <span className="text-5xl">🛍️</span>
+          <h3 className="text-2xl font-bold mt-4 text-gray-800">No products yet</h3>
+          <p className="text-gray-500 mt-2">Check back later or add some from the Admin panel.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {products.map((product: any) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </main>
   );
 }
