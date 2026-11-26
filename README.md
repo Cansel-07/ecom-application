@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MiniCommerce — Next.js E-Commerce Application
 
-## Getting Started
+A full-stack e-commerce web application built with **Next.js (App Router)**, **TypeScript**, **Tailwind CSS**, and **Auth0 v4**. Guests can browse the product catalog freely, while authenticated users can manage their profile settings and create new products through the admin dashboard.
 
-First, run the development server:
+🚀 **Live Demo:** [https://ecom-application.vercel.app](https://ecom-application.vercel.app)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📸 Preview
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> *Tip: Replace these placeholders with screenshots of your Home Page and Create Product Page.*
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Storefront (Home Page) | Admin — Create New Product |
+| :---: | :---: |
+| ![Storefront Preview](public/screenshots/storefront.png) | ![Create Product Preview](public/screenshots/admin-create-product.png) |
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## ✨ Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Public Storefront (`/`):** Open to all visitors without requiring login, featuring a responsive product grid and automatic image fallback handling.
+- **Authentication & Route Protection (Auth0 v4):** Seamless **Sign Up**, **Log In**, and **Log Out** flows integrated into the shared navigation bar, with server-side session checks protecting private routes.
+- **User Profile (`/profile`):** Protected page displaying authenticated user account details and profile settings within the shared layout.
+- **Admin — Create New Product (`/admin/products/new`):** Full product creation form (title, description, brand, SKU, price, currency, tax rate, category, stock, image URL, and draft/publish toggle) with both **client-side** and **server-side** validation and error handling.
+- **Instant Catalog Sync:** Newly published products immediately appear on the storefront via Next.js cache revalidation (`revalidatePath`).
+- **Shared Layout & Theming:** Consistent responsive Navbar, footer, and dark/light theme styling across all pages.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🛠️ Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Framework:** Next.js (App Router) & React
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Authentication:** Auth0 (`@auth0/nextjs-auth0` v4)
+- **Deployment:** Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 📂 Project Structure
+
+```text
+ecom-application/
+├── app/
+│   ├── admin/products/new/   # Admin Create New Product page
+│   ├── api/                  # API route handlers (products, profile)
+│   ├── components/           # Shared UI components (Navbar, ProductImage, etc.)
+│   ├── profile/              # Protected user profile page & view
+│   ├── globals.css           # Global styles and theme variables
+│   ├── layout.tsx            # Root layout with shared navigation
+│   └── page.tsx              # Public storefront (featured products)
+├── lib/
+│   ├── auth0.ts              # Auth0 v4 client configuration
+│   ├── products.ts           # Product validation & data helpers
+│   ├── profile.ts            # User profile helpers
+│   └── store.ts              # Shared in-memory product store
+├── proxy.ts                  # Next.js auth middleware / route protection
+└── package.json
